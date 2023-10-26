@@ -1,0 +1,42 @@
+#!/usr/bin/osascript -l JavaScript
+
+ObjC.import("Foundation");
+ObjC.import("AppKit");
+ObjC.import("stdlib");
+
+// type RGB = { r: number, g: number, b: number };
+
+// Make an opaque color from given RGB object.
+const makeColor = (rgb) => $.NSColor.colorWithSRGBRedGreenBlueAlpha(rgb.r, rgb.g, rgb.b, 1.0);
+//const makeColor = (rgb) => $.NSColor.colorWithCalibratedRedGreenBlueAlpha(rgb.r, rgb.g, rgb.b, 1.0);
+//const makeColor = (rgb) => $.NSColor.colorWithRedGreenBlueAlpha(rgb.r, rgb.g, rgb.b, 1.0);
+
+// Parse color value in #RRGGBB notation into RGB object.
+const parseColor = (hex) => {
+  const pattern = /^#(?<r>[0-9a-fA-F]{2})(?<g>[0-9a-fA-F]{2})(?<b>[0-9a-fA-F]{2})$/;
+  const hex2float = (hex) => parseInt(hex, 16) / 255.0;
+
+  const match = hex.match(pattern);
+
+  if (match) {
+    const {r, g, b} = match.groups;
+    return {r: hex2float(r), g: hex2float(g), b: hex2float(b)};
+  } else {
+    return undefined;
+  }
+};
+
+
+function run(args) {
+  const data = $.NSFileHandle.fileHandleWithStandardInput.availableData;
+  const inputText = $.NSString.alloc.initWithDataEncoding(data, $.NSUTF8StringEncoding);
+  const {name, colors} = JSON.parse(inputText.js);
+
+  const list = $.NSColorList.alloc.initWithName(name);
+  colors.forEach((c) => list.setColorForKey(makeColor(parseColor(c.rgb)), c.name));
+  list.writeToURLError(undefined, undefined);
+  //list.release();
+  $.exit(0);
+}
+
+// vim: ft=javascript
